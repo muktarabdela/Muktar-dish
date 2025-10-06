@@ -8,6 +8,7 @@ const config = {
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
     adminTelegramId: process.env.ADMIN_TELEGRAM_ID,
     telegramGroupId: process.env.TELEGRAM_GROUP_ID,
+    USE_PROXY: process.env.USE_PROXY
 };
 
 module.exports = config;

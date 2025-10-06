@@ -20,14 +20,15 @@ const {
     handleProcessPayout
 } = require('./handlers/adminHandlers');
 const { userReplyKeyboard, adminReplyKeyboard } = require('./utils/keyboards'); // Import adminReplyKeyboard
-const { SocksProxyAgent } = require('socks-proxy-agent');
-const agent = new SocksProxyAgent('socks5h://127.0.0.1:9050');
+// Optional proxy support (disabled by default)
+let botOptions = { polling: true };
 
-
-const bot = new TelegramBot(config.telegramBotToken, {
-    polling: true,
-    request: { agent }
-});
+if (config.USE_PROXY === 'true') {
+    const { SocksProxyAgent } = require('socks-proxy-agent');
+    const agent = new SocksProxyAgent('socks5h://127.0.0.1:9050');
+    botOptions.request = { agent };
+}
+const bot = new TelegramBot(config.telegramBotToken, botOptions);
 
 
 bot.on("polling_error", (msg) => console.log(msg));
@@ -37,6 +38,7 @@ bot.on("polling_error", (msg) => console.log(msg));
 const conversationState = {};
 
 console.log('Bot has been started...');
+
 bot.onText(/\/start/, (msg) => {
     handleStartCommand(bot, msg);
 });
