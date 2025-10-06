@@ -12,6 +12,11 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
     "dotenv": "^17.2.3",
-    "node-telegram-bot-api": "^0.66.0"
+    "express": "^5.1.0",
+    "node-telegram-bot-api": "^0.66.0",
+    "socks-proxy-agent": "^8.0.5"
+  },
+  "devDependencies": {
+    "@types/node-telegram-bot-api": "^0.64.11"
   }
 }

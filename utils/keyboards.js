@@ -1,31 +1,51 @@
 // utils/keyboards.js
 
+const cancelKeyboard = {
+    keyboard: [
+        [{ text: '✖️ Cancel' }]
+    ],
+    resize_keyboard: true,
+    one_time_keyboard: true
+};
+
 const userReplyKeyboard = {
     keyboard: [
-        // First row
         [
             { text: '👤 My Account' },
             { text: '🔄 Update' }
         ],
-        // Second row
         [
-            { text: '❓ How it Works' }
+            { text: '❓ How it Works' },
+            { text: '💵 Withdraw' }
         ]
     ],
-    resize_keyboard: true, // Makes the keyboard fit nicely
-    one_time_keyboard: false // Keeps the keyboard open until the user closes it
+    resize_keyboard: true,
+    one_time_keyboard: false
 };
-// --- ADD THE ADMIN KEYBOARD ---
+
+const accountInlineKeyboard = {
+    inline_keyboard: [
+        [
+            { text: '💳 Add Payment Method', callback_data: 'add_payment_method' },
+        ]
+    ]
+};
+
 const adminReplyKeyboard = {
     keyboard: [
         [{ text: '➕ Start New Referral' }],
-        [{ text: '📋 View All Referrals' }, { text: '✅ Mark as Done' }],
+        [{ text: '📋 View All Referrals' }, { text: '🔄 Update Status' }],
         [{ text: '💸 Payout' }]
     ],
     resize_keyboard: true,
     one_time_keyboard: false
 };
+
+
+
 module.exports = {
     userReplyKeyboard,
-    adminReplyKeyboard
+    adminReplyKeyboard,
+    accountInlineKeyboard,
+    cancelKeyboard,
 };
