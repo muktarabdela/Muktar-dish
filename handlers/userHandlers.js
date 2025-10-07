@@ -194,7 +194,7 @@ const handleWithdrawRequest = async (bot, msg, userState) => {
 
         // 2. Check for payment method
         if (!user.payment_method) {
-            bot.sendMessage(chatId, 'You need to add a payment method before you can withdraw.', {
+            bot.sendMessage(chatId, 'ወጪ ከማድረግዎ በፊት የክፍያ መንገድ ማስገባት አለብዎት።', {
                 reply_markup: accountInlineKeyboard
             });
             return;

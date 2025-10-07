@@ -91,7 +91,6 @@ const handleCustomerPhoneStep = async (bot, msg, currentState, conversationState
     }
 
     try {
-        // Prepare the data for insertion into the 'referrals' table
         const { error } = await supabase.from('referrals').insert([
             {
                 referrer_id: currentState.data.referrer_id,
@@ -108,10 +107,13 @@ const handleCustomerPhoneStep = async (bot, msg, currentState, conversationState
         const customerPhone = currentState.data.new_customer_phone || 'Not Provided';
         const referrerName = currentState.data.referrer_name;
 
+        // --- FIX: Sanitize the customer name to escape special Markdown characters ---
+        const sanitizedCustomerName = customerName.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
+
         // 1. Construct and send the detailed message to the ADMIN
         const adminMessage = `✅ *New Referral Created Successfully* ✅\n\n` +
             `*Referrer:* ${referrerName}\n` +
-            `*New Customer Name:* ${customerName}\n` +
+            `*New Customer Name:* ${sanitizedCustomerName}\n` + // <-- Use sanitized name
             `*New Customer Phone:* ${customerPhone}\n\n` +
             `The status has been set to 'Pending'.`;
 
@@ -119,20 +121,28 @@ const handleCustomerPhoneStep = async (bot, msg, currentState, conversationState
             parse_mode: 'Markdown',
             reply_markup: adminReplyKeyboard
         });
-        const groupMessage = `✅ *አዲስ ሪፈራል ተመዝግቧል*\n\n` +
-            `*${referrerName}* አዲስ ደንበኛ ጠቁሟል: *${customerName}*`;
-        await sendGroupNotification(bot, groupMessage);
+        // const groupMessage = `✅ *አዲስ ሪፈራል ተመዝግቧል*\n\n` +
+        //     `*${referrerName}* አዲስ ደንበኛ ጠቁሟል: *${customerName}*`;
+        // await sendGroupNotification(bot, groupMessage);
+
 
         // 2. Construct and send the detailed message to the original REFERRER
-        const userMessage = `🎉 *አዲስ ሪፈራል አግኝተዋል!* 🎉\n\n` +
-            `አዲስ ደንበኛ, *${customerName}*, የእርስዎን የሪፈራል ኮድ በመጠቀም ተመዝግቧል።\n\n` +
-            `*ሁኔታ:* በመጠባበቅ ላይ\n\n` +
-            `የዲሽ ገጠማው ሲጠናቀቅ ክፍያዎ ገቢ ይደረግልዎታል። እናመሰግናለን`;
+        const userMessage = `🎉 *አዲስ ሪፈራል አግኝተዋል\!* 🎉
 
+የእርስዎን የሪፈራል ኮድ በመጠቀም አዲስ ደንበኛ ተመዝግቧል።
+
+*• የደንበኛ ስም:* ${sanitizedCustomerName}
+*• የሪፈራል ሁኔታ:* በመጠባበቅ ላይ
+
+የዲሽ ገጠማው በተሳካ ሁኔታ ሲጠናቀቅ 50 ብር ወዲያውኑ ገቢ ይደረጋል።
+
+ለበለጠ መረጃ በ 0932874527 ይደውሉልን ወይም በ @Muktar\\_abdela ያግኙን።`;
+
+        // --- Use 'MarkdownV2' for reliable parsing of escaped characters ---
         bot.sendMessage(currentState.data.referrer_chat_id, userMessage, { parse_mode: 'Markdown' });
+
     } catch (dbError) {
-        // Catch any database errors and inform the admin
-        console.error('Supabase insert error:', dbError);
+        console.error('Supabase insert error or Telegram API error:', dbError);
         bot.sendMessage(chatId, "❌ Something went wrong while saving the referral. Please try again.", {
             reply_markup: adminReplyKeyboard
         });
@@ -141,7 +151,6 @@ const handleCustomerPhoneStep = async (bot, msg, currentState, conversationState
         delete conversationState[chatId];
     }
 };
-
 // --- Admin Referral Management ---
 const handleViewAllReferrals = async (bot, msg) => {
     const chatId = msg.chat.id;
@@ -360,9 +369,9 @@ const handleProcessStatusUpdate = async (bot, msg, conversationState) => {
                 const userDoneMessage = `🎉 ለ *${referral.new_customer_name}* ያደረጉት ሪፈራል በተሳካ ሁኔታ ተጠናቋል!\n\n*${reward} ብር* ወደ ሂሳብዎ ገቢ ተደርጓል። \n ከአካውንትዎ ወጪ ማድረግ ይችላሉ።`;
                 bot.sendMessage(userToUpdate.telegram_id, userDoneMessage, { parse_mode: 'Markdown' });
 
-                const groupDoneMessage = `✅ *ሪፈራል ተጠናቋል*\n\n` +
-                    `በ *${userToUpdate.first_name}* ለ *${referral.new_customer_name}*  የተደረገው ሪፈራል ተጠናቋል። *${reward} ብር* ተከፍሏል።`;
-                await sendGroupNotification(bot, groupDoneMessage);
+                // const groupDoneMessage = `✅ *ሪፈራል ተጠናቋል*\n\n` +
+                //     `በ *${userToUpdate.first_name}* ለ *${referral.new_customer_name}*  የተደረገው ሪፈራል ተጠናቋል። *${reward} ብር* ተከፍሏል።`;
+                // await sendGroupNotification(bot, groupDoneMessage);
                 break;
             case 'Rejected':
                 // 2. Update referral status
@@ -376,9 +385,9 @@ const handleProcessStatusUpdate = async (bot, msg, conversationState) => {
 
                 bot.sendMessage(userToReject.telegram_id, userRejectedMessage, { parse_mode: 'Markdown' });
 
-                const groupRejectedMessage = `❌ *Referral Rejected*\n\n` +
-                    `The referral for *${referral.new_customer_name}* by *${userToReject.first_name}* has been rejected.`;
-                await sendGroupNotification(bot, groupRejectedMessage);
+                // const groupRejectedMessage = `❌ *Referral Rejected*\n\n` +
+                //     `The referral for *${referral.new_customer_name}* by *${userToReject.first_name}* has been rejected.`;
+                // await sendGroupNotification(bot, groupRejectedMessage);
                 break;
             case 'Pending':
                 if (referral.status === newStatus) {
@@ -541,9 +550,11 @@ const handlePayoutScreenshot = async (bot, msg, conversationState) => {
             reply_markup: adminReplyKeyboard
         });
 
-        // Notify User
-        const userMessage = `🎉 የ *${request.amount} ብር* ክፍያዎ ተልኳል! \n የአካውንትዎን ቀሪ ሂሳብ ያረጋግጡ።`;
-        bot.sendMessage(request.users.telegram_id, userMessage, { parse_mode: 'Markdown' });
+        const userCaption = `🎉 የ *${request.amount} ብር* ክፍያዎ ተልኳል! \n የአካውንትዎን ቀሪ ሂሳብ ያረጋግጡ።`;
+        bot.sendPhoto(request.users.telegram_id, photoFileId, {
+            caption: userCaption,
+            parse_mode: 'Markdown'
+        });
 
         // NEW: Notify Group with Photo
         const groupCaption = `💸 *ክፍያ ተልኳል!*\n\n*${request.amount} ብር* ለ *${request.users.first_name}* ተልኳል።`;
