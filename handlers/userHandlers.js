@@ -46,7 +46,7 @@ const handleStartCommand = async (bot, msg) => {
         }
         if (!user) {
             console.log(`New user detected: ${firstName} (ID: ${telegramId})`);
-            const referralCode = await generateUniqueReferralCode(firstName, lastName);
+            const referralCode = await generateUniqueReferralCode();
             const { data: newUser, error: insertError } = await supabase
                 .from('users')
                 .insert([
