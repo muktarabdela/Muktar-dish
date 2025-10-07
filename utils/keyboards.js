@@ -11,12 +11,12 @@ const cancelKeyboard = {
 const userReplyKeyboard = {
     keyboard: [
         [
-            { text: '👤 My Account' },
-            { text: '🔄 Update' }
+            { text: '👤የኔ አካውንት' },
+            // { text: '🔄 Update' }
         ],
         [
-            { text: '❓ How it Works' },
-            { text: '💵 Withdraw' }
+            { text: '❓ እንዴት ይሰራል' },
+            { text: '💵 ወጭ' }
         ]
     ],
     resize_keyboard: true,
@@ -26,7 +26,7 @@ const userReplyKeyboard = {
 const accountInlineKeyboard = {
     inline_keyboard: [
         [
-            { text: '💳 Add Payment Method', callback_data: 'add_payment_method' },
+            { text: '💳 የክፍያ መንገድ ያስገቡ', callback_data: 'add_payment_method' },
         ]
     ]
 };

@@ -119,15 +119,15 @@ const handleCustomerPhoneStep = async (bot, msg, currentState, conversationState
             parse_mode: 'Markdown',
             reply_markup: adminReplyKeyboard
         });
-        const groupMessage = `✅ *New Referral Registered*\n\n` +
-            `*${referrerName}* has referred a new customer: *${customerName}*`;
+        const groupMessage = `✅ *አዲስ ሪፈራል ተመዝግቧል*\n\n` +
+            `*${referrerName}* አዲስ ደንበኛ ጠቁሟል: *${customerName}*`;
         await sendGroupNotification(bot, groupMessage);
 
         // 2. Construct and send the detailed message to the original REFERRER
-        const userMessage = `🎉 *You Have a New Referral!* 🎉\n\n` +
-            `A new customer, *${customerName}*, has been registered using your referral code.\n\n` +
-            `*Status:* Pending\n\n` +
-            `You will be credited once the installation is complete. Thank you!`;
+        const userMessage = `🎉 *አዲስ ሪፈራል አግኝተዋል!* 🎉\n\n` +
+            `አዲስ ደንበኛ, *${customerName}*, የእርስዎን የሪፈራል ኮድ በመጠቀም ተመዝግቧል።\n\n` +
+            `*ሁኔታ:* በመጠባበቅ ላይ\n\n` +
+            `የዲሽ ገጠማው ሲጠናቀቅ ክፍያዎ ገቢ ይደረግልዎታል። እናመሰግናለን`;
 
         bot.sendMessage(currentState.data.referrer_chat_id, userMessage, { parse_mode: 'Markdown' });
     } catch (dbError) {
@@ -357,11 +357,11 @@ const handleProcessStatusUpdate = async (bot, msg, conversationState) => {
                 // Admin confirmation
                 bot.sendMessage(chatId, `✅ Success! Referral ID ${referralId} is now 'Done'.\nUser *${userToUpdate.first_name}* has been credited with *${reward} birr*.`, { parse_mode: 'Markdown', reply_markup: adminReplyKeyboard });
                 // User notification
-                const userDoneMessage = `🎉 Your referral for *${referral.new_customer_name}* is complete!\n\n*${reward} birr* has been added to your balance.`;
+                const userDoneMessage = `🎉 ለ *${referral.new_customer_name}* ያደረጉት ሪፈራል በተሳካ ሁኔታ ተጠናቋል!\n\n*${reward} ብር* ወደ ሂሳብዎ ገቢ ተደርጓል። \n ከአካውንትዎ ወጪ ማድረግ ይችላሉ።`;
                 bot.sendMessage(userToUpdate.telegram_id, userDoneMessage, { parse_mode: 'Markdown' });
 
-                const groupDoneMessage = `✅ *Referral Completed*\n\n` +
-                    `The referral for *${referral.new_customer_name}* by *${userToUpdate.first_name}* is complete. *${reward} birr* has been paid out.`;
+                const groupDoneMessage = `✅ *ሪፈራል ተጠናቋል*\n\n` +
+                    `በ *${userToUpdate.first_name}* ለ *${referral.new_customer_name}*  የተደረገው ሪፈራል ተጠናቋል። *${reward} ብር* ተከፍሏል።`;
                 await sendGroupNotification(bot, groupDoneMessage);
                 break;
             case 'Rejected':
@@ -542,11 +542,11 @@ const handlePayoutScreenshot = async (bot, msg, conversationState) => {
         });
 
         // Notify User
-        const userMessage = `🎉 Your payout of *${request.amount} birr* has been sent!`;
+        const userMessage = `🎉 የ *${request.amount} ብር* ክፍያዎ ተልኳል! \n የአካውንትዎን ቀሪ ሂሳብ ያረጋግጡ።`;
         bot.sendMessage(request.users.telegram_id, userMessage, { parse_mode: 'Markdown' });
 
         // NEW: Notify Group with Photo
-        const groupCaption = `💸 *Payment Sent!*\n\n*${request.amount} birr* has been sent to *${request.users.first_name}*.`;
+        const groupCaption = `💸 *ክፍያ ተልኳል!*\n\n*${request.amount} ብር* ለ *${request.users.first_name}* ተልኳል።`;
         await sendGroupPhotoNotification(bot, photoFileId, groupCaption);
 
     } catch (error) {

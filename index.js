@@ -81,9 +81,9 @@ bot.on('message', (msg) => {
             case '📋 View All Referrals':
                 handleViewAllReferrals(bot, msg);
                 break;
-            case '🔄 Update Status':
-                handleUpdateStatus(bot, msg, conversationState);
-                break;
+            // case '🔄 Update Status':
+            //     handleUpdateStatus(bot, msg, conversationState);
+            //     break;
             case '💸 Payout':
                 // Pass the conversation state to start the process
                 handlePayout(bot, msg, conversationState);
@@ -107,16 +107,16 @@ bot.on('message', (msg) => {
         }
 
         switch (text) {
-            case '👤 My Account':
+            case '👤የኔ አካውንት':
                 handleMyAccount(bot, msg);
                 break;
-            case '❓ How it Works':
+            case '❓ እንዴት ይሰራል':
                 handleHowItWorks(bot, msg);
                 break;
             case '🔄 Update':
                 handleUpdate(bot, msg);
                 break;
-            case '💵 Withdraw':
+            case '💵 ወጭ':
                 handleWithdrawRequest(bot, msg, conversationState);
                 break;
         }

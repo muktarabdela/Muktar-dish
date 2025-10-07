@@ -64,7 +64,7 @@ const handleStartCommand = async (bot, msg) => {
             if (insertError) {
                 throw insertError;
             }
-            const welcomeMessage = `🎉 Welcome, ${firstName}!\n\nYou are now part of the Muktar Dish Referral Program.\n\nYour unique referral code is: \n\n\`${newUser.referral_code}\`\n\nShare this code with your friends!`;
+            const welcomeMessage = `🎉 እንኳን ደህና መጡ, ${firstName}!\n\nአሁን የሙክታር ዲሽ የሪፈራል ፕሮግራም አባል ሆነዋል።\n\nየእርስዎ ልዩ የሪፈራል ኮድ: \n\n\`${newUser.referral_code}\`\n\nይህን ኮድ ለጓደኞችዎ ያጋሩ!`;
 
             bot.sendMessage(chatId, welcomeMessage, {
                 parse_mode: 'Markdown',
@@ -122,12 +122,12 @@ const handleMyAccount = async (bot, msg) => {
 
         // Header and Core Details
         let accountSummary = `👤 *Your Account Dashboard*\n\n` +
-            `🔑 *Your Referral Code*\n\`${escapedReferralCode}\`\n\n` +
-            `💰 *Current Balance*\n\`${balance} birr\`\n\n` +
+            `🔑 *የሪፈራል ኮድ*\n\`${escapedReferralCode}\`\n\n` +
+            `💰 *ያለዎት ቀሪ ሂሳብ*\n\`${balance} ብር\`\n\n` +
             `📈 *Referral Statistics*\n` +
-            `   \\- Total: ${totalReferrals}\n` +
-            `   \\- Completed: ${completedReferrals}\n` +
-            `   \\- Pending: ${pendingReferrals}\n` +
+            `   \\- ጠቅላላ: ${totalReferrals}\n` +
+            `   \\- የተጠናቀቀ: ${completedReferrals}\n` +
+            `   \\- በመጠባበቅ ላይ: ${pendingReferrals}\n` +
             `\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_\n\n`; // Markdown separator
 
         let options = {
@@ -139,16 +139,16 @@ const handleMyAccount = async (bot, msg) => {
             const escapedPaymentName = escapeMarkdownV2(user.payment_account_name);
             const escapedPaymentNumber = escapeMarkdownV2(user.payment_account_number);
 
-            accountSummary += `💳 *Payment Information*\n` +
-                `   \\- *Method:* ${escapeMarkdownV2(user.payment_method)}\n` +
-                `   \\- *Name:* ${escapedPaymentName}\n` +
-                `   \\- *Account:* ${escapedPaymentNumber}`;
+            accountSummary += `💳 *የክፍያ መረጃ*\n` +
+                `   \\- *ክፍያ መንገድ:* ${escapeMarkdownV2(user.payment_method)}\n` +
+                `   \\- *ስም:* ${escapedPaymentName}\n` +
+                `   \\- *አካውንት:* ${escapedPaymentNumber}`;
 
             options.reply_markup = userReplyKeyboard; // Show main keyboard
 
         } else {
-            accountSummary += `💳 *Payment Information*\n` +
-                `You have not added a payment method yet\\. To withdraw your earnings, please add one\\.`;
+            accountSummary += `💳 *የክፍያ መረጃ*\n` +
+                `እስካሁን የክፍያ መንገድ አላስገቡም።\\ ገቢዎን ወጪ ለማድረግ እባክዎ የክፍያ መንገድ ያስገቡ።\\.`;
 
             options.reply_markup = accountInlineKeyboard; // Show 'Add Payment Method' button
         }
@@ -167,7 +167,7 @@ const handleAddPaymentMethod = (bot, callbackQuery, userState) => {
     // Set the user's state to expect a payment method choice
     userState[chatId] = { expecting: 'payment_method_choice' };
 
-    const message = "Please choose your payment method.\n\nSend `TE` for Telebirr\nSend `CB` for CBE\n\nOr press Cancel to go back.";
+    const message = "እባክዎ የክፍያ ዘዴዎን ይምረጡ።\n\nለ ቴሌብር `TE` ይላኩ \nለ ኢትዮጵያ ንግድ ባንክ `CB` ይላኩ\n\nወይም ለመመለስ Cancel የሚለውን ይጫኑ።";
 
     // Send the message and replace the main keyboard with the cancel keyboard
     bot.sendMessage(chatId, message, {
@@ -202,7 +202,7 @@ const handleWithdrawRequest = async (bot, msg, userState) => {
 
         // 3. Check for sufficient balance
         if (user.balance < minimumWithdrawal) {
-            bot.sendMessage(chatId, `Your balance is too low. You need at least ${minimumWithdrawal} birr to withdraw. Your current balance is ${user.balance} birr.`);
+            bot.sendMessage(chatId, `ያለዎት ቀሪ ሂሳብዎ በጣም ዝቅተኛ ነው። ወጪ ለማድረግ ቢያንስ ${minimumWithdrawal} ብር ያስፈልግዎታል. የእርስዎ የአሁን ቀሪ ሂሳብ ${user.balance} ብር ነው.`);
             return;
         }
 
@@ -212,14 +212,14 @@ const handleWithdrawRequest = async (bot, msg, userState) => {
             balance: user.balance // Store the current balance in the state
         };
 
-        const promptMessage = `💰 Your current balance is *${user.balance} birr*.
+        const promptMessage = `💰 ያለዎት ቀሪ ሂሳብ *${user.balance} ብር ነው*.
 
-Your payment will be sent to:
-- Method: ${user.payment_method}
-- Name: ${user.payment_account_name}
-- Account: ${user.payment_account_number}
+ክፍያዎ ወደ ሚከተለው ይላካል:
+- ክፍያ መንገድ: ${user.payment_method}
+- ስም: ${user.payment_account_name}
+- አካውንት: ${user.payment_account_number}
 
-Please enter the amount you would like to withdraw.`;
+እባክዎ ወጪ ማድረግ የሚፈልጉትን የገንዘብ መጠን ያስገቡ።`;
 
         bot.sendMessage(chatId, promptMessage, {
             parse_mode: 'Markdown',
@@ -257,7 +257,7 @@ const handleConversation = async (bot, msg, userState) => {
             expecting: 'account_name',
             method: selectedMethod
         };
-        bot.sendMessage(chatId, `Great! Please send the name on your ${selectedMethod} account.`);
+        bot.sendMessage(chatId, `በጣም ጥሩ! እባክዎ የ ${selectedMethod} አካውንትዎን ስም ያስገቡ።`);
     }
     // Stage 2: Waiting for the account name
     else if (state.expecting === 'account_name') {
@@ -269,7 +269,7 @@ const handleConversation = async (bot, msg, userState) => {
             method: state.method,
             accountName: accountName
         };
-        bot.sendMessage(chatId, `Thanks! Now, please send your ${state.method} account/phone number.`);
+        bot.sendMessage(chatId, `እናመሰግናለን! አሁን እባክዎ የ ${state.method} አካውንትዎን/ስልክ ያስገቡ።`);
     }
     // Stage 3: Waiting for the payment number
     else if (state.expecting === 'payment_number') {
@@ -293,7 +293,7 @@ const handleConversation = async (bot, msg, userState) => {
         }
 
 
-        bot.sendMessage(chatId, `✅ Your ${state.method} payment information has been saved.`, {
+        bot.sendMessage(chatId, `✅ የ ${state.method} ክፍያ መረጃዎ ተመዝግቧል።`, {
             reply_markup: userReplyKeyboard
         });
 
@@ -315,13 +315,13 @@ const handleConversation = async (bot, msg, userState) => {
 
         // Validation 2: Check if it's more than their balance
         if (amountToWithdraw > currentBalance) {
-            bot.sendMessage(chatId, `You cannot withdraw more than your available balance. Your balance is ${currentBalance} birr. Please enter a different amount.`);
+            bot.sendMessage(chatId, `You cannot withdraw more than your available balance. Your balance is ${currentBalance} ብር. Please enter a different amount.`);
             return;
         }
 
         // Validation 3: Check if it's less than the minimum
         if (amountToWithdraw < minimumWithdrawal) {
-            bot.sendMessage(chatId, `The minimum withdrawal amount is ${minimumWithdrawal} birr. Please enter a higher amount.`);
+            bot.sendMessage(chatId, `ዝቅተኛው ወጪ ማድረግ የሚቻለው የገንዘብ መጠን ${minimumWithdrawal} ብር ነው። እባክዎ ከዚህ በላይ የሆነ መጠን ያስገቡ።`);
             return;
         }
 
@@ -349,13 +349,13 @@ const handleConversation = async (bot, msg, userState) => {
             await supabase.from('users').update({ balance: newBalance }).eq('id', user.id);
 
             // Success!
-            const userMessage = `✅ *Withdrawal Request Submitted* ✅\n\n` +
-                `Your request to withdraw *${amountToWithdraw} birr* has been received and is now pending.\n\n` +
-                `*Your New Balance:* ${newBalance} birr\n\n` +
-                `*Funds will be sent to:*\n` +
-                `  - Method: ${user.payment_method}\n` +
-                `  - Name: ${user.payment_account_name}\n` +
-                `  - Account: ${user.payment_account_number}`;
+            const userMessage = `✅ *ገንዘብ የማውጣት ጥያቄዎ ተልኳል* ✅\n\n` +
+                `*${amountToWithdraw} ብር* ወጪ ለማድረግ የላኩት ጥያቄ ተቀብለናል፤ አሁን በመጠባበቅ ላይ ነው።\n\n` +
+                `*አዲሱ ቀሪ ሂሳብዎ :* ${newBalance} ብር\n\n` +
+                `*ገንዘቡ የሚላከው ወደ:*\n` +
+                `  - ክፍያ መንገድ: ${user.payment_method}\n` +
+                `  - ስም: ${user.payment_account_name}\n` +
+                `  - አካውንት: ${user.payment_account_number}`;
 
             bot.sendMessage(chatId, userMessage, {
                 parse_mode: 'Markdown',
@@ -366,16 +366,16 @@ const handleConversation = async (bot, msg, userState) => {
                 `*User:* ${user.first_name}\n` +
                 `*user name:* @${user.username}\n` +
                 `*user code:* ${user.referral_code}\n` +
-                `*Amount:* ${amountToWithdraw} birr\n\n` +
+                `*Amount:* ${amountToWithdraw} ብር\n\n` +
                 `*Payment Details:*\n` +
-                `  - Method: ${user.payment_method}\n` +
-                `  - Name: ${user.payment_account_name}\n` +
-                `  - Account: ${user.payment_account_number}`;
+                `  - ክፍያ መንገድ: ${user.payment_method}\n` +
+                `  - ስም: ${user.payment_account_name}\n` +
+                `  - አካውንት: ${user.payment_account_number}`;
 
             bot.sendMessage(config.adminTelegramId, adminMessage, { parse_mode: 'Markdown' });
 
-            const groupWithdrawalMessage = `💰 *New Withdrawal Request*\n\n` +
-                `*${user.first_name}* has requested to withdraw *${amountToWithdraw} birr*.`;
+            const groupWithdrawalMessage = `💰 *አዲስ ገንዘብ የማውጣት ጥያቄ*\n\n` +
+                `${user.first_name} ${amountToWithdraw} ብር ወጪ ለማድረግ ጠይቋል።`;
             await sendGroupNotification(bot, groupWithdrawalMessage);
 
             // Clear the state to end the conversation
@@ -393,25 +393,23 @@ const handleConversation = async (bot, msg, userState) => {
 const handleHowItWorks = (bot, msg) => {
     const chatId = msg.chat.id;
 
-    const howItWorksMessage = `💡 *How the Referral Program Works* 💡
+    const howItWorksMessage = `💡 *የሪፈራል ፕሮግራሙ እንዴት ይሰራል* 💡
 
-It's simple! Just follow these three steps:
+በጣም ቀላል ነው! እነዚህን ሶስት ደረጃዎች ብቻ ይከተሉ:
 
-1️⃣ *Share Your Code*
-   Give your unique referral code (from the 'My Account' section) to friends, family, or anyone who needs a dish installation.
+1️⃣ *ኮድዎን ያጋሩ*
+    ለጓደኞችዎ፣ ለቤተሰብዎ ወይም የዲሽ ገጠማ አገልግሎት ለሚፈልግ ማንኛውም ሰው ከ 'የእኔ አካውንት' ክፍል ውስጥ የሚገኘውን ልዩ የሪፈራል ኮድዎን ይስጡ።
 
-2️⃣ *Your Friend Makes Contact*
-   When your friend calls to book the service, they *must* provide your referral code. This is the most important step to ensure you get your reward!
+2️⃣ *ጓደኛዎ አገልግሎቱን ሲጠይቅ/ወደ ሲደውል*
+    ጓደኛዎ አገልግሎቱን ለማግኘት ሲደውል የእርስዎን የሪፈራል ኮድ መስጠት አለበት። ሽልማትዎን እንዲያገኙ ለማረጋገጥ ይህ በጣም አስፈላጊው እርምጃ ነው!
 
-3️⃣ *You Get Rewarded!*
-   After their installation is successfully completed, you will earn a commission of *50 to 100 birr*. Your account balance will be updated automatically.
-
+3️⃣ * እርስዎ ይሸለማሉ!*
+    የዲሽ ገጠማው በተሳካ ሁኔታ ከተጠናቀቀ በኋላ ከ50 እስከ 100 ብር ኮሚሽን ያገኛሉ። የእርስዎ አካውንት ቀሪ ሂሳብ በራስ-ሰር ይስተካከላል።
 ------------------------------------
 
-💸 *How to Get Your Earnings*
-You can withdraw your balance once you reach the minimum amount. Rewards can be paid out via Telebirr, CBE, or even as a discount on your own services.
-
-Happy sharing!`;
+💸 *ገቢዎን እንዴት ማግኘት ይችላሉ*
+ዝቅተኛውን መጠን ሲያሟሉ ገቢዎን ወጪ ማድረግ ይችላሉ። ሽልማቶች በቴሌብር፣ በኢትዮጵያ ንግድ ባንክ (CBE)።
+መልካም ማጋራት!`;
 
     bot.sendMessage(chatId, howItWorksMessage, { parse_mode: 'Markdown' });
 };
