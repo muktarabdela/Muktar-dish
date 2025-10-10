@@ -17,7 +17,8 @@ const {
     handlePayout,
     handleAdminConversation,
     handleUpdateStatus,
-    handleProcessPayout
+    handleProcessPayout,
+    handleViewAllUsers
 } = require('./handlers/adminHandlers');
 const { userReplyKeyboard, adminReplyKeyboard } = require('./utils/keyboards'); // Import adminReplyKeyboard
 // Optional proxy support (disabled by default)
@@ -76,20 +77,22 @@ bot.on('message', (msg) => {
         // 3. If there's no active conversation, treat it as a new command.
         switch (text) {
             case '➕ Start New Referral':
-                handleStartNewReferral(bot, msg, conversationState); // Pass state object
+                handleStartNewReferral(bot, msg, conversationState);
                 break;
             case '📋 View All Referrals':
                 handleViewAllReferrals(bot, msg);
+                break;
+            case '👥 All Users': // 2. Add a case for the new button
+                handleViewAllUsers(bot, msg);
                 break;
             case '🔄 Update Status':
                 handleUpdateStatus(bot, msg, conversationState);
                 break;
             case '💸 Payout':
-                // Pass the conversation state to start the process
                 handlePayout(bot, msg, conversationState);
                 break;
         }
-    } else { // --- Regular User Logic (using the same conversationState object) ---
+    } else {  // --- Regular User Logic (using the same conversationState object) ---
         if (text === '✖️ Cancel') {
             if (conversationState[chatId]) {
                 delete conversationState[chatId];

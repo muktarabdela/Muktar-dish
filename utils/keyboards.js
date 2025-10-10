@@ -34,8 +34,8 @@ const accountInlineKeyboard = {
 const adminReplyKeyboard = {
     keyboard: [
         [{ text: '➕ Start New Referral' }],
-        [{ text: '📋 View All Referrals' }, { text: '🔄 Update Status' }],
-        [{ text: '💸 Payout' }]
+        [{ text: '📋 View All Referrals' }, { text: '👥 All Users' }], // Added 'All Users'
+        [{ text: '🔄 Update Status' }, { text: '💸 Payout' }]
     ],
     resize_keyboard: true,
     one_time_keyboard: false

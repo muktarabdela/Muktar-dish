@@ -32,6 +32,9 @@ const handleAdminConversation = async (bot, msg, conversationState) => {
         case 'awaiting_new_status':
             await handleProcessStatusUpdate(bot, msg, conversationState);
             break;
+        case 'awaiting_reward_amount':
+            await handleRewardAmountStep(bot, msg, conversationState);
+            break;
 
         case 'awaiting_withdrawal_id_for_payout':
             await handleProcessPayout(bot, msg, conversationState);
@@ -127,12 +130,12 @@ const handleCustomerPhoneStep = async (bot, msg, currentState, conversationState
 
 
         // 2. Construct and send the detailed message to the original REFERRER
-        const userMessage = `🎉 *አዲስ ሪፈራል አግኝተዋል\!* 🎉
+        const userMessage = `🎉 *አዲስ ደንበኛ አስመዝግበዋል\!* 🎉
 
-የእርስዎን የሪፈራል ኮድ በመጠቀም አዲስ ደንበኛ ተመዝግቧል።
+የእርስዎን ኮድ በመጠቀም አዲስ ደንበኛ ተመዝግቧል።
 
 *• የደንበኛ ስም:* ${sanitizedCustomerName}
-*• የሪፈራል ሁኔታ:* በመጠባበቅ ላይ
+*• ሁኔታ:* በመጠባበቅ ላይ
 
 የዲሽ ገጠማው በተሳካ ሁኔታ ሲጠናቀቅ 50 ብር ወዲያውኑ ገቢ ይደረጋል።
 
@@ -324,6 +327,53 @@ const handleAskForStatus = async (bot, msg, conversationState) => {
     }
 };
 
+const handleRewardAmountStep = async (bot, msg, conversationState) => {
+    const chatId = msg.chat.id;
+    const amount = parseInt(msg.text.trim(), 10);
+    const { referralId, newStatus } = conversationState[chatId];
+
+    // 1. Validate the input
+    if (isNaN(amount) || amount <= 0) {
+        bot.sendMessage(chatId, "❌ Invalid amount. Please enter a valid number greater than zero.");
+        return; // Keep conversation open for another try
+    }
+
+    try {
+        const { data: referral, error: fetchError } = await supabase
+            .from('referrals')
+            .select(`*, users (*)`).eq('id', referralId).single();
+
+        if (fetchError || !referral) {
+            throw new Error(`Referral with ID ${referralId} not found.`);
+        }
+
+        if (referral.status === 'Done') {
+            bot.sendMessage(chatId, `Referral ${referralId} is already marked as 'Done'.`, { reply_markup: adminReplyKeyboard });
+            return;
+        }
+
+        const userToUpdate = referral.users;
+        const newBalance = (userToUpdate.balance || 0) + amount;
+
+        // 2. Update referral status and reward amount
+        await supabase.from('referrals').update({ status: newStatus, reward_amount: amount }).eq('id', referralId);
+
+        // 3. Update user's balance
+        await supabase.from('users').update({ balance: newBalance }).eq('id', userToUpdate.id);
+
+        // 4. Send confirmations
+        bot.sendMessage(chatId, `✅ Success! Referral ID ${referralId} is now '${newStatus}'.\nUser *${userToUpdate.first_name}* has been credited with *${amount} birr*.`, { parse_mode: 'Markdown', reply_markup: adminReplyKeyboard });
+
+        const userDoneMessage = `🎉 ለ *${referral.new_customer_name}* ያደረጉት ሪፈራል በተሳካ ሁኔታ ተጠናቋል!\n\n*${amount} ብር* ወደ ሂሳብዎ ገቢ ተደርጓል። \n ከአካውንትዎ ወጪ ማድረግ ይችላሉ።`;
+        bot.sendMessage(userToUpdate.telegram_id, userDoneMessage, { parse_mode: 'Markdown' });
+
+    } catch (error) {
+        console.error("Error in handleRewardAmountStep:", error.message);
+        bot.sendMessage(chatId, `❌ An error occurred: ${error.message}`, { reply_markup: adminReplyKeyboard });
+    } finally {
+        delete conversationState[chatId]; // End conversation
+    }
+};
 const handleProcessStatusUpdate = async (bot, msg, conversationState) => {
     const chatId = msg.chat.id;
     const newStatus = msg.text.trim();
@@ -335,9 +385,18 @@ const handleProcessStatusUpdate = async (bot, msg, conversationState) => {
         delete conversationState[chatId];
         return;
     }
+    if (newStatus === 'Done') {
+        // 1. Store the chosen status and referral ID
+        conversationState[chatId].step = 'awaiting_reward_amount';
+        conversationState[chatId].newStatus = newStatus; // Store 'Done' status
 
+        // 2. Ask the admin for the reward amount
+        bot.sendMessage(chatId, "Please enter the reward amount (e.g., 50) for this referral.", {
+            reply_markup: cancelKeyboard
+        });
+        return; // Stop execution here and wait for the amount
+    }
     try {
-        // For 'Done', we need full details; for others, just the ID is enough.
         const { data: referral, error: fetchError } = await supabase
             .from('referrals')
             .select(`*, users (*)`).eq('id', referralId).single();
@@ -346,33 +405,7 @@ const handleProcessStatusUpdate = async (bot, msg, conversationState) => {
             throw new Error(`Referral with ID ${referralId} not found.`);
         }
 
-        // --- Main Logic Switch ---
         switch (newStatus) {
-            case 'Done':
-                if (referral.status === 'Done') {
-                    bot.sendMessage(chatId, `Referral ${referralId} is already marked as 'Done'.`, { reply_markup: adminReplyKeyboard });
-                    break;
-                }
-
-                const reward = referral.reward_amount;
-                const userToUpdate = referral.users;
-                const newBalance = (userToUpdate.balance || 0) + reward;
-
-                // 1. Update user balance
-                await supabase.from('users').update({ balance: newBalance }).eq('id', userToUpdate.id);
-                // 2. Update referral status
-                await supabase.from('referrals').update({ status: 'Done' }).eq('id', referralId);
-
-                // Admin confirmation
-                bot.sendMessage(chatId, `✅ Success! Referral ID ${referralId} is now 'Done'.\nUser *${userToUpdate.first_name}* has been credited with *${reward} birr*.`, { parse_mode: 'Markdown', reply_markup: adminReplyKeyboard });
-                // User notification
-                const userDoneMessage = `🎉 ለ *${referral.new_customer_name}* ያደረጉት ሪፈራል በተሳካ ሁኔታ ተጠናቋል!\n\n*${reward} ብር* ወደ ሂሳብዎ ገቢ ተደርጓል። \n ከአካውንትዎ ወጪ ማድረግ ይችላሉ።`;
-                bot.sendMessage(userToUpdate.telegram_id, userDoneMessage, { parse_mode: 'Markdown' });
-
-                // const groupDoneMessage = `✅ *ሪፈራል ተጠናቋል*\n\n` +
-                //     `በ *${userToUpdate.first_name}* ለ *${referral.new_customer_name}*  የተደረገው ሪፈራል ተጠናቋል። *${reward} ብር* ተከፍሏል።`;
-                // await sendGroupNotification(bot, groupDoneMessage);
-                break;
             case 'Rejected':
                 // 2. Update referral status
                 const userToReject = referral.users;
@@ -405,7 +438,11 @@ const handleProcessStatusUpdate = async (bot, msg, conversationState) => {
         console.error("Error updating referral status:", error.message);
         bot.sendMessage(chatId, `❌ An error occurred: ${error.message}`, { reply_markup: adminReplyKeyboard });
     } finally {
-        delete conversationState[chatId]; // End conversation
+        // The 'Done' case now has its own conversation step,
+        // so we only delete state for 'Rejected' and 'Pending' here.
+        if (newStatus !== 'Done') {
+            delete conversationState[chatId]; // End conversation
+        }
     }
 };
 
@@ -568,6 +605,51 @@ const handlePayoutScreenshot = async (bot, msg, conversationState) => {
     }
 };
 
+const handleViewAllUsers = async (bot, msg) => {
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, "👥 Fetching all users, please wait...");
+
+    try {
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('id, first_name, username, referral_code, balance, created_at')
+            .order('created_at', { ascending: false }); // Show newest users first
+
+        if (error) throw error;
+
+        if (!users || users.length === 0) {
+            bot.sendMessage(chatId, "There are no users registered in the system.");
+            return;
+        }
+
+        let message = '👥 *All Registered Users*\n\n---\n\n';
+        users.forEach(user => {
+            const date = new Date(user.created_at).toLocaleDateString('en-GB');
+            const username = user.username ? `@${user.username}` : 'N/A';
+
+            message += `*Name:* ${user.first_name}\n` +
+                `*Username:* ${username}\n` +
+                `*Referral Code:* \`${user.referral_code}\`\n` +
+                `*Balance:* ${user.balance || 0} birr\n` +
+                `*Joined:* ${date}\n\n---\n\n`;
+        });
+
+        // Split message if it's too long for Telegram
+        if (message.length > 4096) {
+            const messages = message.match(/[\s\S]{1,4096}/g) || [];
+            for (const msgPart of messages) {
+                await bot.sendMessage(chatId, msgPart, { parse_mode: 'Markdown' });
+            }
+        } else {
+            bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+        }
+
+    } catch (dbError) {
+        console.error("Error fetching users:", dbError);
+        bot.sendMessage(chatId, "❌ An error occurred while fetching the user list. Please try again.");
+    }
+};
+
 
 
 module.exports = {
@@ -575,6 +657,8 @@ module.exports = {
     handleViewAllReferrals,
     handleUpdateStatus,
     handlePayout,
+    handleViewAllUsers,
+    handleRewardAmountStep,
     handleAdminConversation,
     handleProcessPayout,
     handlePayoutScreenshot
